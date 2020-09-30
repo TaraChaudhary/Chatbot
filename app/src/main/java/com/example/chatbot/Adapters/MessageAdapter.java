@@ -16,7 +16,6 @@ import com.example.chatbot.Contract.MessageContract;
 import com.example.chatbot.R;
 import com.example.chatbot.UtilityPackage.Constants;
 
-
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder> {
 
     Cursor cursor;
@@ -26,7 +25,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         this.cursor = cursor;
         this.context = context;
     }
-
     public class MessageViewHolder extends RecyclerView.ViewHolder{
 
         RelativeLayout botLayout;

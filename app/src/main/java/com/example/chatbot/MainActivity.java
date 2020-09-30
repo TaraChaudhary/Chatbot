@@ -1,12 +1,5 @@
 package com.example.chatbot;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -27,6 +20,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract;
 import android.speech.tts.TextToSpeech;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -34,11 +28,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.example.chatbot.Adapters.MessageAdapter;
 import com.example.chatbot.Contract.MessageContract;
 import com.example.chatbot.DBHelper.MessageDBHelper;
 import com.example.chatbot.DataTypes.MessageData;
+import com.example.chatbot.R;
 import com.example.chatbot.UtilityPackage.Constants;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
@@ -109,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(messageAdapter);
 
         AssetManager assetManager = getResources().getAssets();
-        File cacheDirectory = new File(getCacheDir().toString() + "/chatbot");
+        File cacheDirectory = new File(getCacheDir().toString() + "/chatbot/bots/darkbot");
         boolean dirMakingSuccessful = cacheDirectory.mkdirs();
 
         // saving the bot's core data in the cache
@@ -153,7 +155,36 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+        final ProgressDialog pd = new ProgressDialog(MainActivity.this);
+        pd.setTitle("Please Wait");
+        pd.setMessage("Initializing Bot...");
+        pd.setCanceledOnTouchOutside(true);
+        pd.setCancelable(true);
 
+        // handler for communication with the background thread
+        final Handler handler = new Handler(){
+            @Override
+            public void dispatchMessage(Message msg) {
+                super.dispatchMessage(msg);
+                pd.cancel();
+            }
+        };
+
+        // initializing the bot in background thread
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                MagicStrings.root_path = getCacheDir().toString() + "/chatbot";
+                AIMLProcessor.extension = new PCAIMLProcessorExtension();
+                bot = new Bot("darkbot", MagicStrings.root_path, "chat");
+                chat = new Chat(bot);
+                handler.sendMessage(new Message()); // dispatch a message to the UI thread
+            }
+        });
+
+        // finally show the progress dialog box and start the thread
+        pd.show();
+        thread.start();
 
         // listen for button click
         messageSendButton.setOnClickListener(new View.OnClickListener() {
@@ -287,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        builder.setNegativeButton("Nopes", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // do nothing
